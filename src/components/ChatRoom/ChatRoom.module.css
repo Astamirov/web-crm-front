@@ -37,6 +37,12 @@
     
   }
 
+  .messageTime {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+  }
+
   .messageText {
     margin-right: 70px;
   }

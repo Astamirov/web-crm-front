@@ -3,8 +3,6 @@ import Header from "./components/Header/Header";
 import SignIn from "./components/SignIn/SignIn";
 import { Routes, Route } from "react-router-dom";
 
-
-
 // import ChatList from "./components/ChatList/ChatList";
 import ChatRoom from "./components/ChatRoom/Chat";
 
@@ -13,7 +11,6 @@ import ListStudent from "./components/ListStudent/ListStudent";
 import Contact from "./components/Contact/Contact";
 import Students from "./components/Students/Students";
 import Home from "./components/Home/Home";
-import HomeTwo from "./components/HomeTwo/HomeTwo";
 import Profil from "./components/Profil/Profil";
 import Footer from "./components/Footer/Footer";
 import Info from "./components/Info/Info";
@@ -33,10 +30,10 @@ function App() {
       {token ? <Auth /> : null}
       <Routes>
         <Route path={"/Chat"} element={<Profil />} />
-       
+
         <Route path={"/group"} element={<Group />} />
 
-        <Route path={"/"} element={<Home/>} />
+        <Route path={"/"} element={<Home />} />
 
         <Route path={"/login"} element={<SignIn />} />
         {/* <Route path="/" element={<ChatList />} /> */}

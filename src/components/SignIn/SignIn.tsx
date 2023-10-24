@@ -5,7 +5,6 @@ import { AppDispatch, RootState } from "../../app/store";
 import style from "./SignIn.module.css";
 import { Link, useNavigate } from "react-router-dom";
 import { AiOutlineHome } from "react-icons/ai";
-import { ImCheckmark } from "react-icons/im";
 
 const SignIn = () => {
   const [login, setLogin] = useState("");
@@ -18,17 +17,22 @@ const SignIn = () => {
     | null;
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  console.log(error)
+  console.log(error);
 
   const handleSingUp = (e: FormEvent) => {
     e.preventDefault();
-    dispatch(authSignIn({
-      _id: "", login, password,
-      isAdmin: false,
-      isMentor: false,
-      isStudent: false,
-      result: 0
-    }));
+    dispatch(
+      authSignIn({
+        _id: "",
+        login,
+        password,
+        isAdmin: false,
+        isMentor: false,
+        isStudent: false,
+        result: 0,
+        group: "",
+      })
+    );
   };
 
   if (token) {
@@ -60,7 +64,7 @@ const SignIn = () => {
           <form onSubmit={handleSingUp}>
             {error ? <div className={style.err_log}>{error}</div> : null}
             <input
-            placeholder="name"
+              placeholder="name"
               onBlur={hendleBlur}
               className={blur && !login ? style.input__errr : style.inputt}
               onChange={handleSetName}
@@ -77,7 +81,11 @@ const SignIn = () => {
               value={password}
               type="password"
             />
-            <button onClick={() => setBtn(!btn)} type="submit" className={style.button}>
+            <button
+              onClick={() => setBtn(!btn)}
+              type="submit"
+              className={style.button}
+            >
               Авторизоваться
             </button>
           </form>

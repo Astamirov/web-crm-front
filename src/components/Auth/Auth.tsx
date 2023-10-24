@@ -1,11 +1,10 @@
 import style from "./Auth.module.css";
 import { Link } from "react-router-dom";
-import { RootState, AppDispatch } from "../../app/store";
-import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "../../app/store";
+import { useSelector } from "react-redux";
 
 const Auth = () => {
 
-const dispatch = useDispatch<AppDispatch>()
 const userOne = useSelector((state: RootState) => state.usersSlice.oneUser);
 const chats = useSelector((state: RootState) => state.chat.chats);
 

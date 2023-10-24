@@ -25,6 +25,8 @@ function ChatRoom() {
   const messages = useSelector((state: RootState) => state.messages.messages);
   const [messageInput, setMessageInput] = useState("");
   const users = useSelector((state: RootState) => state.usersSlice.users);
+  const [loadingMessages, setLoadingMessages] = useState(true);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [showUserList, setShowUserList] = useState(false); // Состояние для управления видимостью списка пользователей
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -35,10 +37,13 @@ function ChatRoom() {
       users.find((user) => user._id === participant)
     );
 
-  console.log(chatUsers);
   useEffect(() => {
+    setLoadingMessages(true);
+
     if (chatId) {
-      dispatch(fetchMessages(chatId));
+      dispatch(fetchMessages(chatId)).then(() => {
+        setLoadingMessages(false);
+      });
       dispatch(fetchUsers());
       dispatch(oneUser());
     }
@@ -147,7 +152,7 @@ function ChatRoom() {
   };
 
   const formatDate = (timestamp) => {
-    const momentTimestamp = moment(timestamp, "HH:mm");
+    const momentTimestamp = moment(timestamp);
 
     const now = moment();
     const today = moment().startOf("day");
@@ -158,7 +163,7 @@ function ChatRoom() {
     } else if (momentTimestamp.isSame(yesterday, "day")) {
       return `вчера, ${momentTimestamp.format("HH:mm")}`;
     } else {
-      return momentTimestamp.format("DD.MM.YYYY, HH:mm");
+      return momentTimestamp.format(" HH:mm");
     }
   };
 
@@ -206,39 +211,43 @@ function ChatRoom() {
         </div>
       </div>
       <div className={styles.chatMessages} ref={messagesContainerRef}>
-        {messages.map((message, index) => (
-          <>
-            <div className={styles.dateDay}>
-              {renderDateLabel(message, index)}
-            </div>
-
-            <div key={message.id} className={styles.message}>
-              {users.map((user) =>
-                user._id === message.sender ? (
-                  <div
-                    className={styles.userName}
-                    key={user._id}
-                    style={{ color: getUsernameColor(user.login) }}
-                  >
-                    {user.login}
-                  </div>
-                ) : null
-              )}
-              <div className={styles.messageText}>{message.text}</div>
-              <div className={styles.messageTime}>
-                {formatDate(message.timestamp)}
+        {loadingMessages ? (
+          <div className={styles.loader}>Загрузка сообщений...</div>
+        ) : (
+          messages.map((message, index) => (
+            <React.Fragment key={message.id}>
+              <div className={styles.dateDay}>
+                {renderDateLabel(message, index)}
               </div>
-              {userOne && userOne._id === message.sender ? (
-                <button
-                  className={styles.deleteButton}
-                  onClick={() => deleteMessageHandler(message._id)}
-                >
-                  <RiChatDeleteLine />
-                </button>
-              ) : null}
-            </div>
-          </>
-        ))}
+
+              <div className={styles.message}>
+                {users.map((user) =>
+                  user._id === message.sender ? (
+                    <div
+                      className={styles.userName}
+                      key={user._id}
+                      style={{ color: getUsernameColor(user.login) }}
+                    >
+                      {user.login}
+                    </div>
+                  ) : null
+                )}
+                <div className={styles.messageText}>{message.text}</div>
+                <div className={styles.messageTime}>
+                  {formatDate(message.timestamp)}
+                </div>
+                {userOne && userOne._id === message.sender ? (
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => deleteMessageHandler(message._id)}
+                  >
+                    <RiChatDeleteLine />
+                  </button>
+                ) : null}
+              </div>
+            </React.Fragment>
+          ))
+        )}
       </div>
       <form onSubmit={sendMessageHandler}>
         <div className={styles.chatInput}>

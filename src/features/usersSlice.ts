@@ -16,7 +16,7 @@ type StateUsers = {
   users: User[];
   oneUser: User[];
   error: null | string | unknown;
-  signUp: Boolean;
+  signUp: boolean;
 };
 
 const initialState: StateUsers = {
@@ -48,7 +48,7 @@ export const oneUser = createAsyncThunk<
 
 //удаление юзера
 export const deleteUser = createAsyncThunk<
-User, string, { rejectValue: unknown }
+User, string, { rejectValue: unknown, state: RootState }
 >("user/delete",async (_id, thunkAPI) => {
   console.log(_id)
   try {
@@ -61,18 +61,17 @@ User, string, { rejectValue: unknown }
     })
     const user = await res.json()
     return user
-  } catch (error) {
-    return thunkAPI.rejectWithValue(error.message);
+  } catch (error: unknown) {
+    return thunkAPI.rejectWithValue(error);
   }
 })
 
 //изменение result
 export const patchResult = createAsyncThunk<
-  User[],
-  { rejectValue: unknown; state: RootState }
+  User[], string,
+  { rejectValue: unknown, state: RootState }
 >("user/patchResult", async (_, thunkAPI) => {
   try {
-    // Выполните PATCH-запрос на сервер с использованием fetch
     const res = await fetch("http://localhost:3000/userResult", {
       method: "PATCH",
       headers: {
@@ -84,8 +83,7 @@ export const patchResult = createAsyncThunk<
     const data = await res.json();
     return data;
   } catch (error) {
-    // Если произошла ошибка, отклоните thunk с сообщением об ошибке
-    return thunkAPI.rejectWithValue(error.message);
+    return thunkAPI.rejectWithValue(error);
   }
 });
 
@@ -143,7 +141,6 @@ const usersSlice = createSlice({
         state.oneUser = action.payload;
       })
       .addCase(patchResult.fulfilled, (state, action) => {
-        // Обработка успешного завершения thunk
         state.oneUser = action.payload;
       })
       .addCase(authSignUp.pending, (state) => {
