@@ -2,7 +2,7 @@
 .chatRoom {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 80vh;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
   }
   
@@ -34,7 +34,17 @@
     margin-bottom: 8px;
     position: relative;
     flex: 1;
-    
+  }
+
+  .dateLabel {
+    position: absolute;
+    top: 22%;
+    right: 50%;
+    z-index: 999;
+    width: 80px;
+    text-align: center;
+    background-color: #6767676a;
+    border-radius: 15px;
   }
 
   .messageTime {
@@ -44,7 +54,7 @@
   }
 
   .messageText {
-    margin-right: 70px;
+    margin-right: 110px;
   }
 
   .deleteButton {
@@ -119,3 +129,6 @@
     max-height: 150px; 
     overflow-y: auto;
   }
+
+  
+

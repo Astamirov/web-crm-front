@@ -27,10 +27,14 @@ function ChatRoom() {
   const users = useSelector((state: RootState) => state.usersSlice.users);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [showDateLabel, setShowDateLabel] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [showUserList, setShowUserList] = useState(false); // Состояние для управления видимостью списка пользователей
   const [selectedUsers, setSelectedUsers] = useState([]);
   const messagesContainerRef = useRef(null);
+  const [topMessageIndex, setTopMessageIndex] = useState(0);
+  const [dateLabelTimeout, setDateLabelTimeout] =
+    useState<NodeJS.Timeout | null>(null);
   const chatUsers = chat.chats
     ?.find((chat) => chat._id === chatId)
     ?.participants.map((participant) =>
@@ -76,10 +80,13 @@ function ChatRoom() {
   const sendMessageHandler = (e) => {
     e.preventDefault();
     if (messageInput.trim() && userOne && socket) {
+      setSendingMessage(true);
+
       const newMessage = {
         text: messageInput,
         sender: userOne._id,
         chat: chatId,
+        timestamp: new Date().toISOString(),
       };
       socket?.emit("newMessage", newMessage);
       setMessageInput("");
@@ -89,7 +96,8 @@ function ChatRoom() {
           messagesContainerRef.current.scrollTop =
             messagesContainerRef.current.scrollHeight;
         }
-      }, 200);
+        setSendingMessage(false);
+      }, 7000);
     }
   };
 
@@ -131,24 +139,40 @@ function ChatRoom() {
     }
   };
 
-  const renderDateLabel = (message, index) => {
-    if (
-      index === 0 ||
-      moment(messages[index - 1].timestamp, "HH:mm").day() !==
-        moment(message.timestamp, "HH:mm").day()
-    ) {
-      return (
-        <div className={styles.messageDay}>
-          {moment(message.timestamp, "HH:mm").calendar(null, {
-            sameDay: "[Сегодня]",
-            lastDay: "[Вчера]",
-            lastWeek: "DD.MM.YYYY",
-            sameElse: "DD.MM.YYYY",
-          })}
-        </div>
-      );
+  const scrollHandler = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const containerTop = container.getBoundingClientRect().top;
+    let foundTopMessage = false;
+    let newTopMessageIndex = topMessageIndex;
+
+    for (let i = 0; i < messages.length; i++) {
+      const messageElement = container.childNodes[i];
+      if (!messageElement) continue;
+      const messageElementTop = messageElement.getBoundingClientRect().top;
+
+      if (messageElementTop >= containerTop && !foundTopMessage) {
+        newTopMessageIndex = i;
+        foundTopMessage = true;
+      }
     }
-    return null;
+
+    if (foundTopMessage && newTopMessageIndex !== topMessageIndex) {
+      setTopMessageIndex(newTopMessageIndex);
+      setShowDateLabel(true);
+
+      if (dateLabelTimeout) {
+        clearTimeout(dateLabelTimeout);
+      }
+
+      // Скрыть дату через 3 секунды
+      const timeoutId = setTimeout(() => {
+        setShowDateLabel(false);
+      }, 3000);
+
+      setDateLabelTimeout(timeoutId);
+    }
   };
 
   const formatDate = (timestamp) => {
@@ -159,11 +183,11 @@ function ChatRoom() {
     const yesterday = moment().subtract(1, "days").startOf("day");
 
     if (momentTimestamp.isSame(now, "day")) {
-      return momentTimestamp.format("HH:mm");
+      return `сегодня, ${momentTimestamp.format("HH:mm")}`;
     } else if (momentTimestamp.isSame(yesterday, "day")) {
       return `вчера, ${momentTimestamp.format("HH:mm")}`;
     } else {
-      return momentTimestamp.format(" HH:mm");
+      return momentTimestamp.format("DD.MM.YY HH:mm");
     }
   };
 
@@ -210,17 +234,24 @@ function ChatRoom() {
           )}
         </div>
       </div>
-      <div className={styles.chatMessages} ref={messagesContainerRef}>
+      <div
+        className={styles.chatMessages}
+        ref={messagesContainerRef}
+        onScroll={scrollHandler}
+      >
         {loadingMessages ? (
           <div className={styles.loader}>Загрузка сообщений...</div>
         ) : (
-          messages.map((message, index) => (
-            <React.Fragment key={message.id}>
-              <div className={styles.dateDay}>
-                {renderDateLabel(message, index)}
+          <>
+            {showDateLabel && (
+              <div className={styles.dateLabel}>
+                {messages[topMessageIndex]
+                  ? formatDate(messages[topMessageIndex].timestamp)
+                  : ""}
               </div>
-
-              <div className={styles.message}>
+            )}
+            {messages.map((message, index) => (
+              <div className={styles.message} key={message.id}>
                 {users.map((user) =>
                   user._id === message.sender ? (
                     <div
@@ -245,8 +276,8 @@ function ChatRoom() {
                   </button>
                 ) : null}
               </div>
-            </React.Fragment>
-          ))
+            ))}
+          </>
         )}
       </div>
       <form onSubmit={sendMessageHandler}>
@@ -256,9 +287,14 @@ function ChatRoom() {
             placeholder="Напишите сообщение..."
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
+            disabled={sendingMessage}
           />
-          <button type="submit" className={styles.button}>
-            Отправить
+          <button
+            type="submit"
+            className={styles.button}
+            disabled={sendingMessage}
+          >
+            {sendingMessage ? "Отправка..." : "Отправить"}
           </button>
         </div>
       </form>
